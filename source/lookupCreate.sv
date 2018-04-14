@@ -34,22 +34,26 @@ logic [11:0] path1;
 logic [3:0] length1;
 logic [7:0] lookupTab1;
 
-typedef enum bit [3:0] {IDLE, READ_BIT, GET_CHAR, GET_LENGTH, GET_PATH, WAIT, SAVE, DONE} state;
+typedef enum bit [3:0] {IDLE, READ_BIT, GET_CHAR, GET_LENGTH, GET_PATH, GET_PATH2, SAVE, DONE} state;
 	state curr;
 	state next;
 
 	always_ff @ (posedge(clk), negedge(n_rst))
 	begin
 		if(n_rst == 0)
-			curr <= WAIT;
+		begin
+			curr <= IDLE;
 			length <= 0;
 			path <= 0;
 			lookupTab = 0;
+		end
 		else
+		begin
 			curr <= next;
 			length <= length1;
 			path <= path1;
 			lookupTab <= lookupTab1;
+		end
 			
 	end
 

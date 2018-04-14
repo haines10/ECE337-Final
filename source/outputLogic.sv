@@ -20,7 +20,7 @@ module outputLogic
 	output reg [7:0] charOut
 );
 
-wire [7:0] lookup;
+logic [7:0] lookup;
 
 //Refer to registers for Hashing explanation
 	always_comb
@@ -28,7 +28,7 @@ wire [7:0] lookup;
 		lookup = 7'b0;
 		writeComp = 0;
 	
-		if(enable_Out)
+		if(enable_out)
 		begin
 			if(length <= 7)
 			begin
@@ -55,13 +55,15 @@ wire [7:0] lookup;
 					end
 					
 					12: begin
-						lookup = 248 + location[12:10];
+						lookup = 248 + location[11:10];
 					end
 				endcase
 			end
+			charOut = Table[lookup];
+			writeComp = 1;
+		end
 	end
 
-assign charOut = Table[lookup];
-assign writeComp = 1;
+
 endmodule
 

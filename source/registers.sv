@@ -21,7 +21,7 @@ module registers
 );
 
 //Intermediate saving the hash value
-wire [7:0] hash;
+logic [7:0] hash;
 
 	always_comb
 	begin
@@ -57,13 +57,13 @@ wire [7:0] hash;
 					end
 					//Length 12 hash set 248+3 bit value (2^3 = 8)
 					12: begin
-						hash = 248 + path[12:10];
+						hash = 248 + path[11:10];
 					end
 				endcase
 			end
+		Table[hash] = character;
+		saveComp = 1;
+		end
 	end
-//Use hash to select proper register to save character								
-assign Table[hash] = character;
-//Assert Save complete flag
-assign saveComp = 1;
+
 endmodule

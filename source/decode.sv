@@ -29,23 +29,27 @@ module decode
 	output reg decodeDone
 );
 
-wire [7:0] nxt_location;
+logic [11:0] nxt_location;
 logic [3:0] length1;
 
-typedef enum bit [2:0] {IDLE, READ_BIT, GET_LENGTH, GET_PATH, WRITE, DONE} state;
+typedef enum bit [2:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, DONE} state;
 	state curr;
 	state next;
 
 	always_ff @ (posedge(clk), negedge(n_rst))
 	begin
 		if(n_rst == 0)
+		begin
 			curr <= IDLE;
 			location <= 8'b0;
 			length <= 4'b0;
+		end
 		else
+		begin
 			curr <= next;
 			location <= nxt_location;
 			length <= length1;
+		end
 	end
 
 	always_comb
@@ -53,7 +57,7 @@ typedef enum bit [2:0] {IDLE, READ_BIT, GET_LENGTH, GET_PATH, WRITE, DONE} state
 
 	next = curr;
 	nxt_location = location;
-	length1 = length
+	length1 = length;
 	data_read = 0;
 	decodeDone = 0;
 	enable = 0;
@@ -79,13 +83,13 @@ typedef enum bit [2:0] {IDLE, READ_BIT, GET_LENGTH, GET_PATH, WRITE, DONE} state
 		GET_LENGTH: begin
 		
 				length1 = rx_data[3:0];
-				if(length1 == 16
+				if(length1 == 16)
 				begin
 					next = DONE;
 				end
 				else
 				begin
-					next = GET_PATH;
+					next = GET_LOCA;
 				end
 		end
 		//Saves last 4 bits as location. Asserts data_read to get byte
@@ -104,9 +108,11 @@ typedef enum bit [2:0] {IDLE, READ_BIT, GET_LENGTH, GET_PATH, WRITE, DONE} state
 			enable = 1;
 			//Moves to read bit if write is complete
 			if(writeComp == 1)
+			begin
 				next = READ_BIT;
+			end
 		end
-		DONE:
+		DONE: begin
 			decodeDone = 1;
 			if(lookupDone == 1)
 			begin
@@ -115,7 +121,8 @@ typedef enum bit [2:0] {IDLE, READ_BIT, GET_LENGTH, GET_PATH, WRITE, DONE} state
 			end		
 		end
 	endcase
-end
+	end
+endmodule
 
 
 
