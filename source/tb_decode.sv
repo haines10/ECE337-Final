@@ -22,14 +22,14 @@ module tb_decode ();
 	reg tb_data_ready;
 	reg tb_overrun_error;
 	reg tb_framing_error;
-	reg tb_lookupDone;
+	reg tb_lookupDone = 1;
 	reg tb_writeComp;
 	reg tb_data_read;
 	reg [11:0] tb_location;
 	reg [3:0] tb_length;
 	reg tb_enable;
 	reg tb_decodeDone;	
-
+	reg [31:0] tb_tester1;
 	generate
 
 		decode DUT (.clk(tb_clk), .n_rst(tb_n_rst), .rx_data(tb_rx_data), .data_ready(tb_data_ready), .overrun_error(tb_overrun_error), .framing_error(tb_framing_error), .lookupDone(tb_lookupDone), .writeComp(tb_writeComp), .data_read(tb_data_read), .location(tb_location), .length(tb_length), .enable(tb_enable), .decodeDone(tb_decodeDone));
@@ -57,7 +57,7 @@ module tb_decode ();
 	initial begin
 		tb_n_rst		= 1'b1;			
 		tb_test_num		= 1'b0;
-	
+		
 		@(negedge tb_clk);
 		tb_n_rst	<= 1'b0; 	
 		@cb;
@@ -70,36 +70,35 @@ module tb_decode ();
 //Test 1:
 		tb_test_num = tb_test_num + 1;
 		
-		cb.n_rst	<= 1'b0;
-		
-		if (tb_data_read == cb.data_read)	
-			$info("Test Case %0d:: PASSED", tb_test_num);
-		else
-			$error("Test Case %0d:: FAILED", tb_test_num);
-			
-		if (tb_location == cb.location)	
-			$info("Test Case %0d:: PASSED", tb_test_num);
-		else
-			$error("Test Case %0d:: FAILED", tb_test_num);
-			
-		if (tb_length == cb.length)	
-			$info("Test Case %0d:: PASSED", tb_test_num);
-		else
-			$error("Test Case %0d:: FAILED", tb_test_num);	
-	
-		if (tb_enable == cb.enable)	
-			$info("Test Case %0d:: PASSED", tb_test_num);
-		else
-			$error("Test Case %0d:: FAILED", tb_test_num);
-		
-		if (tb_decodeDone == cb.decodeDone)	
-			$info("Test Case %0d:: PASSED", tb_test_num);
-		else
-			$error("Test Case %0d:: FAILED", tb_test_num);
-			
+		tb_n_rst	<= 1'b0; 	
 		@cb;
+		cb.n_rst	<= 1'b1;
 
-// Test 2:
+		tb_tester1 = 32'b01101000011000010110100001100001;
+
+ 		tb_rx_data = tb_tester1[7:0];
+
+		tb_data_ready = 1'b1;
+		#(CLK_PERIOD * 2);
+		tb_data_ready = 1'b0;
+		#(CLK_PERIOD);
+		tb_tester1 = tb_tester1 >> 8;
+		tb_rx_data = tb_tester1[7:0];
+		tb_data_ready = 1'b1;
+		#(CLK_PERIOD * 2);
+		tb_data_ready = 1'b0;
+		#(CLK_PERIOD);
+		tb_tester1 = tb_tester1 >> 8;
+		tb_rx_data = tb_tester1[7:0];
+		tb_data_ready = 1'b1;
+		#(CLK_PERIOD);
+		tb_data_ready = 1'b0;
+		#(CLK_PERIOD);
+		tb_data_ready = 1'b1;
+		
+		
+
+/* Test 2:
 		tb_test_num = tb_test_num + 1;
 		
 		cb.n_rst	<= 1'b0;
@@ -196,6 +195,7 @@ module tb_decode ();
 			$error("Test Case %0d:: FAILED", tb_test_num);
 			
 		@cb;
+*/
 			
 	end
 endmodule 

@@ -9,7 +9,7 @@
 module outputLogic
 (
 	//Input wire from registers 
-	input wire [7:0] Table [256:0],
+	input wire [7:0] Table [255:0],
 	//Input from decode block
 	input wire [3:0] length,
 	input wire enable_out,

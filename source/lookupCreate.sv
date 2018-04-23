@@ -34,7 +34,7 @@ logic [11:0] path1;
 logic [3:0] length1;
 logic [7:0] lookupTab1;
 
-typedef enum bit [3:0] {IDLE, READ_BIT, GET_CHAR, GET_LENGTH, GET_PATH, GET_PATH2, SAVE, DONE} state;
+typedef enum bit [3:0] {IDLE, WAIT,WAIT2, GET_CHAR, GET_LENGTH, GET_PATH, GET_PATH2, SAVE, DONE} state;
 	state curr;
 	state next;
 
@@ -72,34 +72,38 @@ typedef enum bit [3:0] {IDLE, READ_BIT, GET_CHAR, GET_LENGTH, GET_PATH, GET_PATH
 		//Idle State
 		IDLE: begin
 			if(data_ready)
-				next = READ_BIT;
+				next = GET_CHAR;
 		end
 		
 		//Assert data_read flag to read in byte and move to GET_CHAR
-		READ_BIT: begin
-			if(data_ready)
-			begin
-				data_read = 1;
-				next = GET_CHAR;
-				if(overrun_error || framing_error)
-				begin
-					next = IDLE;
-				end
-			end
+		//READ_BIT: begin
+			//if(data_ready)
+			//begin
+				//next = GET_CHAR;
+				//if(overrun_error || framing_error)
+				//begin
+				//	next = IDLE;
+				//end
+			//end
 				
-			else
-				next = READ_BIT;
+			//else
+				//next = READ_BIT;
 
-		end
+		//end
 		
 		//Assign whole byte to be the lookup table value. Move to GET_LENGTH
 		GET_CHAR: begin
 			//data_read flag asserted to obtain next byte
+
+			if(overrun_error || framing_error)
+			begin
+					next = IDLE;
+			end
 			if(data_ready)
 			begin
 				lookupTab1 = rx_data;
 				data_read = 1;
-				next = GET_LENGTH;
+				next = WAIT;
 			end
 			else
 			begin
@@ -126,7 +130,7 @@ typedef enum bit [3:0] {IDLE, READ_BIT, GET_CHAR, GET_LENGTH, GET_PATH, GET_PATH
 				begin
 					path1[3:0] = rx_data[7:4];
 					data_read = 1;
-					next = GET_PATH2;
+					next = WAIT2;
 				end
 			end
 		end
@@ -143,9 +147,25 @@ typedef enum bit [3:0] {IDLE, READ_BIT, GET_CHAR, GET_LENGTH, GET_PATH, GET_PATH
 			//saveComp is the completion flag from the register save
 			if(saveComp)
 			begin
-				next = READ_BIT;
+				next = GET_CHAR;
 			end
+			data_read = 1;
 		end
+
+		WAIT: begin
+			if(data_ready)
+			begin
+				next = GET_LENGTH;
+			end
+			end
+
+		WAIT2: begin
+			if(data_ready)
+			begin
+				next = GET_PATH2;
+			end
+			end
+			
 			
 
 		//Enters if EOF is found. Does not leave util decodeDone is asserted

@@ -66,21 +66,27 @@ typedef enum bit [2:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, 
 		//Idle state. Only moves to READ when data_ready & lookupDone
 		IDLE: begin
 			if(data_ready && lookupDone)
-				next = READ_BIT;
+				next = GET_LENGTH;
 		end
 		//Reads in first byte
 		READ_BIT: begin
-		
-			data_read = 1;
-			next = GET_LENGTH;
-
+			if(data_ready)
+			begin
+				data_read = 1;
+				next = GET_LENGTH;
+			end
 			if(overrun_error || framing_error)
 			begin
 				next = IDLE;
 			end
 		end
+		
 		//Reads in next byte. Saves first 4 bits as Length
 		GET_LENGTH: begin
+				if(overrun_error || framing_error)
+				begin
+					next = IDLE;
+				end
 		
 				length1 = rx_data[3:0];
 				if(length1 == 16)

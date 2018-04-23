@@ -16,12 +16,12 @@ include /home/ecegrid/a/ece337/Course_Prod/course_make_vars
 # (do not include the source folder in the name)
 # NOTE: YOU WILL NEED TO SET THIS VARIABLE'S VALUE WHEN WORKING WITH HEIRARCHICAL DESIGNS
 # AND THE AUTOMATED GRADING SYSTEM
-COMPONENT_FILES	:= 
+COMPONENT_FILES	:= decode.sv lookupCreate.sv outputLogic.sv rcu.sv rcv_block.sv REG.sv registers.sv rx_data_buff.sv sr_9bit.sv start_bit_det.sv stop_bit_chk.sv timer.sv flex_stp_sr.sv flex_counter.sv
 
 # Specify the name of the top level file (do not include the source folder in the name)
 # NOTE: YOU WILL NEED TO SET THIS VARIABLE'S VALUE WHEN WORKING WITH HEIRARCHICAL DESIGNS
 # AND THE AUTOMATED GRADING SYSTEM
-TOP_LEVEL_FILE	:= 
+TOP_LEVEL_FILE	:= huffChip.sv
 
 # Specify the filepath of the test bench you want to use (ie. tb_top_level.sv)
 # (do not include the source folder in the name)
@@ -34,7 +34,6 @@ TB_HELPER_FILES	:=
 # Get the top level design and test_bench module names
 TB_MODULE		:= $(notdir $(basename $(TEST_BENCH)))
 TOP_MODULE	:= $(notdir $(basename $(TOP_LEVEL_FILE)))
-
 # Select the Cell Library to use with simulations
 GATE_LIB		:= $(AMI_05_LIB)
 
@@ -148,6 +147,26 @@ print_vars:
 	@echo -e "Course Library: '$(LABS_IP_LIB)'"
 	@echo -e "Source work library: '$(S_WORK_LIB)'"
 	@echo -e "Mapped work library: '$(M_WORK_LIB)'"
+
+##############################################################################
+# Custom Simulation Targets
+##############################################################################
+
+tbsim_flex_stp_sr_source: $(S_WORK_LIB) $(addprefix $(S_WORK_LIB)/, tb_flex_stp_sr $(basename $(STP_SR_FILE)) stp_sr_8_msb stp_sr_4_lsb)
+	@echo -e "Simulating Source Versions of Flexible Serial-to-Parallel Shift Register Configurations"
+	@$(SIMULATE) -i -t ps $(S_WORK_LIB).tb_flex_stp_sr
+
+tbsim_flex_stp_sr_mapped: $(M_WORK_LIB) $(addprefix $(M_WORK_LIB)/, tb_flex_stp_sr $(basename $(STP_SR_FILE)) stp_sr_8_msb stp_sr_4_lsb)
+	@echo -e "Simulating Mapped Versions of Flexible Serial-to-Parallel Shift Register Configurations"
+	@$(SIMULATE) -i -t ps $(M_WORK_LIB).tb_flex_stp_sr
+
+tbsim_flex_pts_sr_source: $(S_WORK_LIB) $(addprefix $(S_WORK_LIB)/, tb_flex_pts_sr $(basename $(PTS_SR_FILE)) pts_sr_8_msb pts_sr_4_lsb)
+	@echo -e "Simulating Source Versions of Flexible Parallel-to-Serial Shift Register Configurations"
+	@$(SIMULATE) -i -t ps $(S_WORK_LIB).tb_flex_pts_sr
+
+tbsim_flex_pts_sr_mapped: $(M_WORK_LIB) $(addprefix $(M_WORK_LIB)/, tb_flex_pts_sr $(basename $(PTS_SR_FILE)) pts_sr_8_msb pts_sr_4_lsb)
+	@echo -e "Simulating Mapped Versions of Flexible Parallel-to-Serial Shift Register Configurations"
+	@$(SIMULATE) -i -t ps $(M_WORK_LIB).tb_flex_pts_sr
 
 ##############################################################################
 # General Compilation Targets
@@ -362,4 +381,5 @@ syn_mapped do_mapping.tcl:
 	@echo -e '$(subst $(newline),\n,$(subst \n,\\n,${SYN_CMDS}))' > do_mapping.tcl
 	$(DC_SHELL) -x "source -echo do_mapping.tcl"
 	@echo -e "Done\n\n"
+
 
