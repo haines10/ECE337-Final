@@ -33,8 +33,9 @@ module lookupCreate
 logic [11:0] path1;
 logic [3:0] length1;
 logic [7:0] lookupTab1;
+logic enHold;
 
-typedef enum bit [3:0] {IDLE, WAIT,WAIT2, GET_CHAR, GET_LENGTH, GET_PATH, GET_PATH2, SAVE, DONE} state;
+typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, GET_PATH2, SAVE, DONE, READ_BIT} state;
 	state curr;
 	state next;
 
@@ -46,6 +47,7 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2, GET_CHAR, GET_LENGTH, GET_PATH, GET_PA
 			length <= 0;
 			path <= 0;
 			lookupTab = 0;
+			enable <= 0;
 		end
 		else
 		begin
@@ -53,6 +55,7 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2, GET_CHAR, GET_LENGTH, GET_PATH, GET_PA
 			length <= length1;
 			path <= path1;
 			lookupTab <= lookupTab1;
+			enable <= enHold;
 		end
 			
 	end
@@ -60,13 +63,13 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2, GET_CHAR, GET_LENGTH, GET_PATH, GET_PA
 	always_comb
 	begin
 
+	enHold = enable;
 	next = curr;
 	length1 = length;
 	lookupTab1 = lookupTab;
 	path1 = path;
 	data_read = 0;
 	lookupDone = 0;
-	enable = 0;
 	
 	case(curr)
 		//Idle State
@@ -76,20 +79,21 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2, GET_CHAR, GET_LENGTH, GET_PATH, GET_PA
 		end
 		
 		//Assert data_read flag to read in byte and move to GET_CHAR
-		//READ_BIT: begin
-			//if(data_ready)
-			//begin
-				//next = GET_CHAR;
-				//if(overrun_error || framing_error)
-				//begin
-				//	next = IDLE;
-				//end
-			//end
+		READ_BIT: begin
+			if(data_ready)
+			begin
+				data_read = 1;
+				next = GET_CHAR;
+				if(overrun_error || framing_error)
+				begin
+					next = IDLE;
+				end
+			end
 				
-			//else
-				//next = READ_BIT;
+			else
+				next = READ_BIT;
 
-		//end
+		end
 		
 		//Assign whole byte to be the lookup table value. Move to GET_LENGTH
 		GET_CHAR: begin
@@ -122,7 +126,7 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2, GET_CHAR, GET_LENGTH, GET_PATH, GET_PA
 			if(data_ready)
 			begin
 				//Length of 16 indicates lookup table is complete
-				if(length == 16)
+				if(length == 15)
 				begin
 					next = DONE;
 				end
@@ -138,18 +142,19 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2, GET_CHAR, GET_LENGTH, GET_PATH, GET_PA
 		//Retrieve remaining 8 bits of path
 		GET_PATH2: begin
 			path1[11:4] = rx_data;
-			next = SAVE;
+			next = WAIT3;
 		end
 		
 		//Ensure encode value saved in register
 		SAVE: begin
-			enable = 1;
+			enHold = 1;
 			//saveComp is the completion flag from the register save
 			if(saveComp)
 			begin
-				next = GET_CHAR;
+				next = READ_BIT;
+				enHold = 0;
 			end
-			data_read = 1;
+			
 		end
 
 		WAIT: begin
@@ -157,14 +162,17 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2, GET_CHAR, GET_LENGTH, GET_PATH, GET_PA
 			begin
 				next = GET_LENGTH;
 			end
-			end
+		end
 
 		WAIT2: begin
 			if(data_ready)
 			begin
 				next = GET_PATH2;
 			end
-			end
+		end
+		WAIT3: begin
+			next = SAVE;
+		end
 			
 			
 

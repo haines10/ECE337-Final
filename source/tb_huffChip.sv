@@ -19,10 +19,11 @@ module tb_huffChip ();
 	reg tb_n_rst;
 	reg tb_externalEn;
 	reg [7:0] tb_externalChar;
-	reg [31:0] testStuff;
+	reg [55:0] testStuff;
 	reg [7:0] holdStuff;
 	reg dataLoss;	
 	reg data_ready_out;
+	integer counter;
 	generate
 		huffChip DUT (.serial_in(tb_serial_in), .clk(tb_clk), .n_rst(tb_n_rst), .externalEn(tb_externalEn), .externalChar(tb_externalChar), .data_loss(dataLoss), .data_ready_out(data_ready_out));
 	endgenerate
@@ -115,7 +116,21 @@ module tb_huffChip ();
 		reset_dut;
 //Test 1:
 		tb_test_num = tb_test_num + 1;
-		testStuff = 32'b01101000011001010110100001100001;
+		testStuff = 56'b00000000000100100000111100000000000000000001001001101100;
+		
+		for(counter = 0; counter < 56; counter += 8)
+		begin
+			holdStuff = testStuff[7:0];
+			send_packet(holdStuff);
+			#(NORM_DATA_PERIOD);
+			testStuff = testStuff >> 8;
+		end 
+
+
+		/*holdStuff = testStuff[7:0];
+		send_packet(holdStuff);
+		#(NORM_DATA_PERIOD * 2);
+		testStuff = testStuff >> 8;
 		holdStuff = testStuff[7:0];
 		send_packet(holdStuff);
 		#(NORM_DATA_PERIOD * 2);
@@ -123,6 +138,11 @@ module tb_huffChip ();
 		holdStuff = testStuff[7:0];
 		send_packet(holdStuff);
 		#(NORM_DATA_PERIOD * 2);
+		testStuff = testStuff >> 8;
+		holdStuff = testStuff[7:0];
+		send_packet(holdStuff);
+		#(NORM_DATA_PERIOD * 2);
+		*/
 		
 		
 		

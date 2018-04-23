@@ -22,23 +22,25 @@ module registers
 
 //Intermediate saving the hash value
 logic [7:0] hash;
+integer holder;
 
 	always_comb
 	begin
-		hash = 7'b0;
+		
 		saveComp = 0;
-
+		hash = 7'b0;
+		holder = length;
 		if(enable)
 		begin
 			
 			//If length is 7 or less bits, use the path as the key value (0 to 128)
-			if(length <= 7)
+			if(holder <= 7)
 			begin
 				hash[6:0] = path[6:0];
 			end
 			else
 			begin
-				case(length)
+				case(holder)
 					//Length 8 hash set 128+6 bit value (2^6 = 64)				
 					8: begin
 						hash = 128 + path[8:3];

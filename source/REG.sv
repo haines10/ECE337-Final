@@ -22,7 +22,7 @@ module REG
 
 logic [7:0] Table_hold [255:0];
  
-registers IN (.length(length), .enable(enableIN), .character(charIn), .path(path), .Table(Table_hold), .saveComp(saveComp));
+registers IN (.length(length), .enable(enableIn), .character(charIn), .path(path), .Table(Table_hold), .saveComp(saveComp));
 
 outputLogic OUT (.Table(Table_hold), .length(lengthOut), .enable_out(enableOut), .location(location), .writeComp(writeComp), .charOut(charOut));
 

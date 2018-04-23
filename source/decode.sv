@@ -32,7 +32,7 @@ module decode
 logic [11:0] nxt_location;
 logic [3:0] length1;
 
-typedef enum bit [2:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, DONE} state;
+typedef enum bit [2:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, DONE, WAIT} state;
 	state curr;
 	state next;
 
@@ -66,7 +66,18 @@ typedef enum bit [2:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, 
 		//Idle state. Only moves to READ when data_ready & lookupDone
 		IDLE: begin
 			if(data_ready && lookupDone)
-				next = GET_LENGTH;
+			begin
+				data_read = 1;
+		
+				if(rx_data == 15)
+				begin
+					next = IDLE;
+				end
+				else
+				begin
+					next = GET_LENGTH;
+				end
+			end
 		end
 		//Reads in first byte
 		READ_BIT: begin
@@ -89,7 +100,7 @@ typedef enum bit [2:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, 
 				end
 		
 				length1 = rx_data[3:0];
-				if(length1 == 16)
+				if(length1 == 15)
 				begin
 					next = DONE;
 				end
@@ -102,7 +113,7 @@ typedef enum bit [2:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, 
 		GET_LOCA: begin
 			nxt_location[3:0] = rx_data[7:4];
 			data_read  = 1;
-			next = GET_LOCA2;
+			next = WAIT;
 		end
 		//Saves full byte into the last (Most Significant) bits of location
 		GET_LOCA2: begin
@@ -125,6 +136,12 @@ typedef enum bit [2:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, 
 				next = IDLE;
 				
 			end		
+		end
+		WAIT: begin
+			if(data_ready)
+			begin
+				next = GET_LOCA2;
+			end
 		end
 	endcase
 	end
