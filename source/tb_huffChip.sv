@@ -19,11 +19,15 @@ module tb_huffChip ();
 	reg tb_n_rst;
 	reg tb_externalEn;
 	reg [7:0] tb_externalChar;
-	reg [55:0] testStuff;
+	reg [79:0] testStuff;
+	reg [215:0] testStuff2;
+	reg [23:0] testStuff3;
+	reg [63:0] testStuff4;
 	reg [7:0] holdStuff;
 	reg dataLoss;	
 	reg data_ready_out;
 	integer counter;
+	reg [39:0] tb_expected_string1;
 	generate
 		huffChip DUT (.serial_in(tb_serial_in), .clk(tb_clk), .n_rst(tb_n_rst), .externalEn(tb_externalEn), .externalChar(tb_externalChar), .data_loss(dataLoss), .data_ready_out(data_ready_out));
 	endgenerate
@@ -114,16 +118,25 @@ module tb_huffChip ();
 		
 		// DUT Reset
 		reset_dut;
-//Test 1:
+
+
+//Test 1: The letter "l"
 		tb_test_num = tb_test_num + 1;
-		testStuff = 56'b00000000000100100000111100000000000000000001001001101100;
+		testStuff = 80'b00000000000011110000000000010010000000000000111100000000000000000001001001101100;
 		
-		for(counter = 0; counter < 56; counter += 8)
+		for(counter = 0; counter < 80; counter += 8)
 		begin
 			holdStuff = testStuff[7:0];
 			send_packet(holdStuff);
 			#(NORM_DATA_PERIOD);
 			testStuff = testStuff >> 8;
+			/*if(data_ready_out)
+			begin
+				if(tb_externalChar == char[counter2])
+					$info("Test Passed");
+				else
+					$info("Test Failed");
+			*/	
 		end 
 
 
@@ -151,32 +164,72 @@ module tb_huffChip ();
 		
 			
 
-// Test 2:
-		tb_test_num = tb_test_num + 1;
-		
-		if (tb_externalChar == cb.externalChar)	
-			$info("Test Case %0d:: PASSED", tb_test_num);
-		else
-			$error("Test Case %0d:: FAILED", tb_test_num);
+// Test 2: The word "hello"
 			
-
-// Test 3: 
+		tb_test_num = tb_test_num + 1;
+		counter = 0;
+		testStuff2 = 216'b000000000101001101100101000000000110001101101000000000000000000101101100000000000111001101101111111111111111111111111111000000000110001100000000010100110000000000000001000000000000000100000000011100111111111111111111;
+		tb_expected_string1 = 40'b0110100001100101011011000110110001101111;
+		
+		for(counter = 0; counter < 80; counter += 8)
+		begin
+			holdStuff = testStuff2[7:0];
+			send_packet(holdStuff);
+			#(NORM_DATA_PERIOD);
+			testStuff2 = testStuff2 >> 8;
+			if(data_ready_out)
+			begin
+				if(tb_externalChar == tb_expected_string1[39:32])
+					$info("Test Passed");
+				else
+					$info("Test Failed");
+				tb_expected_string1 = tb_expected_string1 << 8;
+			end
+		end
+		
+// Test 3: Corner Case- Path Longer than 12 (lookupCreate)
 		tb_test_num = tb_test_num + 1;
 
-		if (tb_externalChar == cb.externalChar)	
-			$info("Test Case %0d:: PASSED", tb_test_num);
-		else
-			$error("Test Case %0d:: FAILED", tb_test_num);
+		counter = 0;
+		testStuff3 = 24'b010101010101111001100001;
+
+		for(counter = 0; counter < 80; counter += 8)
+		begin
+			holdStuff = testStuff3[7:0];
+			send_packet(holdStuff);
+			#(NORM_DATA_PERIOD);
+			testStuff3 = testStuff3 >> 8;
+		end
 			
 	
-// Test 4:
+// Test 4: Corner Case- Path Longer than 12 (decode block)
 		tb_test_num = tb_test_num + 1;
 
-		if (tb_externalChar == cb.externalChar)	
-			$info("Test Case %0d:: PASSED", tb_test_num);
-		else
-			$error("Test Case %0d:: FAILED", tb_test_num);
-			
+		counter = 0;
+		testStuff4 = 64'b0101010101011110000000000000111100000000000000000001001001101100;
+
+		for(counter = 0; counter < 80; counter += 8)
+		begin
+			holdStuff = testStuff4[7:0];
+			send_packet(holdStuff);
+			#(NORM_DATA_PERIOD);
+			testStuff4 = testStuff4 >> 8;
+		end
+
+// Test 5: Corner Case- Path Longer than 12 (decode block)
+		tb_test_num = tb_test_num + 1;
+
+		counter = 0;
+		testStuff4 = 64'b0101010101011110000000000000111100000000000000000001001001101100;
+
+		for(counter = 0; counter < 80; counter += 8)
+		begin
+			holdStuff = testStuff4[7:0];
+			send_packet(holdStuff);
+			#(NORM_DATA_PERIOD);
+			testStuff4 = testStuff4 >> 8;
+		end
+		
 	end
 endmodule 
 

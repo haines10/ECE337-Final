@@ -36,18 +36,19 @@ logic [3:0] lengthOut_hold;
 logic enableWrite;
 logic decodeDone_hold;
 logic [7:0] charOut_hold;
+logic loadBuff_hold;
 
 
 
 rcv_block UART (.clk(clk), .n_rst(n_rst), .serial_in(serial_in), .data_read(data_read_hold), .rx_data(rx_data_hold), .data_ready(data_ready_hold), .overrun_error(overrun_hold), .framing_error(framing_hold));
 
-lookupCreate TABLE (.clk(clk), .n_rst(n_rst), .rx_data(rx_data_hold), .data_ready(data_ready_hold), .overrun_error(overrun_hold), .framing_error(framing_hold), .decodeDone(decodeHold), .saveComp(saveHold), .data_read(data_read_hold2), .lookupTab(lookupTab_hold), .length(lengthIn_hold), .enable(enableSave), .lookupDone(lookupHold), .path(pathHold));
+lookupCreate TABLE (.clk(clk), .n_rst(n_rst), .rx_data(rx_data_hold), .data_ready(data_ready_hold), .overrun_error(overrun_hold), .framing_error(framing_hold), .decodeDone(decodeDone_hold), .saveComp(saveHold), .data_read(data_read_hold2), .lookupTab(lookupTab_hold), .length(lengthIn_hold), .enable(enableSave), .lookupDone(lookupHold), .path(pathHold));
 
-decode DECODING (.clk(clk), .n_rst(n_rst), .rx_data(rx_data_hold), .data_ready(data_ready_hold), .overrun_error(overrun_hold), .framing_error(framing_hold), .lookupDone(lookupHold), .writeComp(writeHold), .data_read(data_read_hold1), .location(locationHold), .length(lengthOut_hold), .enable(enableWrite), .decodeDone(decodeDone_hold));
+decode DECODING (.clk(clk), .n_rst(n_rst), .rx_data(rx_data_hold), .data_ready(data_ready_hold), .overrun_error(overrun_hold), .framing_error(framing_hold), .lookupDone(lookupHold), .writeComp(writeHold), .data_read(data_read_hold1), .location(locationHold), .length(lengthOut_hold), .enable(enableWrite), .decodeDone(decodeDone_hold), .loadBuff(loadBuff_hold));
 
 REG BothWays (.length(lengthIn_hold), .charIn(lookupTab_hold), .path(pathHold), .enableIn(enableSave), .lengthOut(lengthOut_hold), .location(locationHold), .enableOut(enableWrite), .saveComp(saveHold), .writeComp(writeHold), .charOut(charOut_hold));
 
-rx_data_buff OUTSTUFF (.clk(clk), .n_rst(n_rst), .load_buffer(saveHold), .packet_data(charOut_hold), .data_read(externalEn), .rx_data(externalChar), .data_ready(data_ready_out), .overrun_error(data_loss));
+rx_data_buff OUTSTUFF (.clk(clk), .n_rst(n_rst), .load_buffer(loadBuff_hold), .packet_data(charOut_hold), .data_read(externalEn), .rx_data(externalChar), .data_ready(data_ready_out), .overrun_error(data_loss));
 
 assign data_read_hold = data_read_hold1 || data_read_hold2;
 

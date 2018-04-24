@@ -34,8 +34,9 @@ logic [11:0] path1;
 logic [3:0] length1;
 logic [7:0] lookupTab1;
 logic enHold;
+logic lookupHold;
 
-typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, GET_PATH2, SAVE, DONE, READ_BIT} state;
+typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, GET_PATH2, SAVE, DONE, READ_BIT, CLEAR} state;
 	state curr;
 	state next;
 
@@ -48,6 +49,7 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, 
 			path <= 0;
 			lookupTab = 0;
 			enable <= 0;
+			lookupDone <= 0;
 		end
 		else
 		begin
@@ -56,6 +58,7 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, 
 			path <= path1;
 			lookupTab <= lookupTab1;
 			enable <= enHold;
+			lookupDone <= lookupHold;
 		end
 			
 	end
@@ -63,13 +66,14 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, 
 	always_comb
 	begin
 
+	lookupHold = lookupDone;
 	enHold = enable;
 	next = curr;
 	length1 = length;
 	lookupTab1 = lookupTab;
 	path1 = path;
 	data_read = 0;
-	lookupDone = 0;
+	
 	
 	case(curr)
 		//Idle State
@@ -128,8 +132,16 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, 
 				//Length of 16 indicates lookup table is complete
 				if(length == 15)
 				begin
-					next = DONE;
+					data_read = 1;
+					next = CLEAR;
+					
 				end
+				else if(length < 15 && length > 12)
+				begin
+					$error("Invalid path length, exceeds 12 bits");
+					next = IDLE;
+				end
+				
 				else
 				begin
 					path1[3:0] = rx_data[7:4];
@@ -178,16 +190,28 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, 
 
 		//Enters if EOF is found. Does not leave util decodeDone is asserted
 		DONE: begin
-			lookupDone = 1;
+			
 			if(decodeDone == 1)
 			begin
-				next = IDLE;	
+				next = IDLE;
+				length1 = '0;	
 			end
-			else
+			else if(data_ready)
 			begin
 				next = DONE;
+				lookupHold = 0;
 			end
-		end	
+		end
+		
+		CLEAR: begin
+			if(data_ready)
+			begin
+				lookupHold = 1;
+				data_read = 1;
+				next = DONE;	
+			end
+		end
+				
 	endcase
 end
 endmodule

@@ -27,9 +27,9 @@ logic [7:0] lookup;
 	begin
 		lookup = 7'b0;
 		writeComp = 0;
-	
 		if(enable_out)
 		begin
+			
 			if(length <= 7)
 			begin
 				lookup[6:0] = location[6:0];
