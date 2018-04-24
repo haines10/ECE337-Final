@@ -36,7 +36,7 @@ logic [7:0] lookupTab1;
 logic enHold;
 logic lookupHold;
 
-typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, GET_PATH2, SAVE, DONE, READ_BIT, CLEAR} state;
+typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, GET_PATH2, SAVE, DONE, READ_BIT, CLEAR, ERR} state;
 	state curr;
 	state next;
 
@@ -121,7 +121,7 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, 
 		
 		//The first four bits following the character represent length of path. Retrieve and move to GET_PATH
 		GET_LENGTH: begin
-			length1 = rx_data[3:0];
+			length1 = rx_data[7:4];
 			next = GET_PATH;
 		end
 		
@@ -139,12 +139,12 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, 
 				else if(length < 15 && length > 12)
 				begin
 					$error("Invalid path length, exceeds 12 bits");
-					next = IDLE;
+					next = ERR;
 				end
 				
 				else
 				begin
-					path1[3:0] = rx_data[7:4];
+					path1[11:8] = rx_data[3:0];
 					data_read = 1;
 					next = WAIT2;
 				end
@@ -153,7 +153,7 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, 
 		
 		//Retrieve remaining 8 bits of path
 		GET_PATH2: begin
-			path1[11:4] = rx_data;
+			path1[7:0] = rx_data;
 			next = WAIT3;
 		end
 		
@@ -210,6 +210,9 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, 
 				data_read = 1;
 				next = DONE;	
 			end
+		end
+		
+		ERR: begin
 		end
 				
 	endcase

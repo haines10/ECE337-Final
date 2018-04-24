@@ -32,30 +32,30 @@ logic [7:0] lookup;
 			
 			if(length <= 7)
 			begin
-				lookup[6:0] = location[6:0];
+				lookup[6:0] = location[11:5];
 			end
 			else
 			begin
 				case(length)
 				
 					8: begin
-						lookup = 128 + location[8:3];
+						lookup = 128 + location[11:6];
 					end
 					
 					9: begin
-						lookup = 192 + location[9:5];
+						lookup = 192 + location[11:7];
 					end
 					
 					10: begin
-						lookup = 224 + location[10:7];
+						lookup = 224 + location[11:8];
 					end
 
 					11: begin
-						lookup = 240 + location[11:9];
+						lookup = 240 + location[11:8];
 					end
 					
 					12: begin
-						lookup = 248 + location[11:10];
+						lookup = 248 + location[11:9];
 					end
 				endcase
 			end

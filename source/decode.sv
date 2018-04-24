@@ -35,7 +35,7 @@ logic [3:0] length1;
 logic enableHold;
 logic decodeDone_hold;
 
-typedef enum bit [3:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, DONE, WAIT, WAIT_BUFF} state;
+typedef enum bit [3:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, DONE, WAIT, WAIT_BUFF, ERR} state;
 	state curr;
 	state next;
 
@@ -73,7 +73,7 @@ typedef enum bit [3:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, 
 	case(curr)
 		//Idle state. Only moves to READ when data_ready & lookupDone
 		IDLE: begin
-			if(data_ready && lookupDone)
+			if(lookupDone && data_ready)
 			begin
 				next = GET_LENGTH;
 			end
@@ -98,11 +98,13 @@ typedef enum bit [3:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, 
 				begin
 					next = IDLE;
 				end
-		
-				length1 = rx_data[3:0];
-				
-		
-				next = GET_LOCA;
+	
+				if(data_ready)
+				begin
+					length1 = rx_data[7:4];
+					next = GET_LOCA;
+				end
+
 		end
 		//Saves last 4 bits as location. Asserts data_read to get byte
 		GET_LOCA: begin
@@ -110,7 +112,7 @@ typedef enum bit [3:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, 
 			if(length < 15 && length > 12)
 			begin
 				$error("Invalid path length, exceeds 12 bits");
-				next = IDLE;
+				next = ERR;
 			end
 			else
 			begin
@@ -123,7 +125,7 @@ typedef enum bit [3:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, 
 				
 				else if(data_ready)
 				begin
-					nxt_location[3:0] = rx_data[7:4];
+					nxt_location[11:8] = rx_data[3:0];
 					data_read  = 1;
 					next = WAIT;
 				end
@@ -133,20 +135,17 @@ typedef enum bit [3:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, 
 		GET_LOCA2: begin
 			if(data_ready)
 			begin
-				nxt_location[11:4] = rx_data;
-				data_read = 1;
+				nxt_location[7:0] = rx_data;
+				enableHold = 1;
 				next = WRITE;
 			end
 		end
 		//Enables output logic to write data
 		WRITE: begin
+			enableHold = 0;
 			if(writeComp)
 			begin
 				next = WAIT_BUFF;
-			end
-			if(writeComp == 0)
-			begin
-				enableHold = !enable;
 			end
 			//Moves to read bit if write is complete
 			
@@ -160,10 +159,11 @@ typedef enum bit [3:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, 
 			begin
 				next = DONE;
 				decodeDone_hold = 0;
+				length1 = 0;
 			end		
 		end
 		WAIT: begin
-			if(data_ready)
+			if(!data_ready)
 			begin
 				next = GET_LOCA2;
 			end
@@ -172,10 +172,13 @@ typedef enum bit [3:0] {IDLE, READ_BIT, GET_LENGTH, GET_LOCA, GET_LOCA2, WRITE, 
 		WAIT_BUFF: begin
 			if(data_ready)
 			begin
-				enableHold = 0;
+				data_read = 1;
 				loadBuff = 1;
-				next = READ_BIT;
+				next = GET_LENGTH;
 			end
+		end
+
+		ERR: begin
 		end
 			
 			

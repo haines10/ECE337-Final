@@ -36,22 +36,22 @@ integer holder;
 			//If length is 7 or less bits, use the path as the key value (0 to 128)
 			if(holder <= 7)
 			begin
-				hash[6:0] = path[6:0];
+				hash[6:0] = path[11:5];
 			end
 			else
 			begin
 				case(holder)
 					//Length 8 hash set 128+6 bit value (2^6 = 64)				
 					8: begin
-						hash = 128 + path[8:3];
+						hash = 128 + path[11:6];
 					end
 					//Length 9 hash set 192+5 bit value (2^5 = 32)
 					9: begin
-						hash = 192 + path[9:5];
+						hash = 192 + path[11:7];
 					end
 					//Length 10 hash set 224+4 bit value (2^4 = 16)
 					10: begin
-						hash = 224 + path[10:7];
+						hash = 224 + path[11:8];
 					end
 					//Length 11 hash set 240+3 bit value (2^3 = 8)
 					11: begin
@@ -59,7 +59,7 @@ integer holder;
 					end
 					//Length 12 hash set 248+3 bit value (2^3 = 8)
 					12: begin
-						hash = 248 + path[11:10];
+						hash = 248 + path[11:9];
 					end
 				endcase
 			end
