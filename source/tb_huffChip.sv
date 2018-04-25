@@ -33,8 +33,8 @@ module tb_huffChip ();
 	//reg [7:0] verifier;
 	//reg [7:0] testParam;
 	//reg enShift;
-	reg isTrue;
-	integer tracker;
+	//reg isTrue;
+	//integer tracker;
 	generate
 		huffChip DUT (.serial_in(tb_serial_in), .clk(tb_clk), .n_rst(tb_n_rst), .externalEn(tb_externalEn), .externalChar(tb_externalChar), .data_loss(dataLoss), .data_ready_out(data_ready_out));
 	endgenerate
@@ -111,7 +111,7 @@ module tb_huffChip ();
 		//#0.1; 
 		
 		// Test case 0: Basic Power on Reset
-		//tb_test_case = 0;
+		tb_test_num = 0;
 		
 		// Power-on Reset Test case: Simply populate the expected outputs
 		// These values don't matter since it's a reset test but really should be set to 'idle'/inactive values
@@ -138,15 +138,15 @@ module tb_huffChip ();
 
 //Test 1: The letter "l"
 		tb_test_num = tb_test_num + 1;
-		testStuff = 80'b00000000000011110000000000010010000000000000111100000000000000000001001001101100;
+		testStuff = 80'b011011000010100000000000000000001111000000000000001010000000001111000000000000;
 		
 		for(counter = 0; counter < 80; counter += 8)
 		begin
 			tb_externalEn = 0;
-			holdStuff = testStuff[7:0];
+			holdStuff = testStuff[79:72];
 			send_packet(holdStuff);
 			#(NORM_DATA_PERIOD);
-			testStuff = testStuff >> 8;
+			testStuff = testStuff << 8;
 			if(data_ready_out)
 			begin
 				if(tb_externalChar == 8'b01101100)
@@ -155,6 +155,10 @@ module tb_huffChip ();
 					$info("Test 1 Failed");
 			
 				tb_externalEn = 1;
+			end
+			else
+			begin
+				tb_externalEn = 0;
 			end
 				
 		end 
@@ -261,7 +265,7 @@ module tb_huffChip ();
 		end
 
 /*	
-// Test 3: Corner Case- Path Longer than 12 (lookupCreate)
+// Test 4: Corner Case- Path Longer than 12 (lookupCreate)
 		tb_test_num = tb_test_num + 1;
 
 		counter = 0;
@@ -276,7 +280,7 @@ module tb_huffChip ();
 		end
 			
 	
-// Test 4: Corner Case- Path Longer than 12 (decode block)
+// Test 5: Corner Case- Path Longer than 12 (decode block)
 		tb_test_num = tb_test_num + 1;
 
 		counter = 0;
@@ -290,19 +294,7 @@ module tb_huffChip ();
 			testStuff4 = testStuff4 << 8;
 		end
 
-// Test 5: Corner Case- Path Longer than 12 (decode block)
-		tb_test_num = tb_test_num + 1;
 
-		counter = 0;
-		testStuff4 = 64'b0101010101011110000000000000111100000000000000000001001001101100;
-
-		for(counter = 0; counter < 80; counter += 8)
-		begin
-			holdStuff = testStuff4[7:0];
-			send_packet(holdStuff);
-			#(NORM_DATA_PERIOD);
-			testStuff4 = testStuff4 >> 8;
-		end
 		
 
 */

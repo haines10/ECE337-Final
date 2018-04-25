@@ -22,7 +22,7 @@ module rx_data_buff
 	reg [7:0] nxt_rx_data;
 	reg nxt_overrun_error;
 	reg nxt_data_ready;
-	integer i;
+	//integer i;
 	
 	always @ (negedge n_rst, posedge clk)
 	begin : REG_LOGIC

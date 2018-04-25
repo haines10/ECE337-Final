@@ -47,7 +47,7 @@ typedef enum bit [3:0] {IDLE, WAIT,WAIT2,WAIT3, GET_CHAR, GET_LENGTH, GET_PATH, 
 			curr <= IDLE;
 			length <= 0;
 			path <= 0;
-			lookupTab = 0;
+			lookupTab <= 0;
 			enable <= 0;
 			lookupDone <= 0;
 		end
